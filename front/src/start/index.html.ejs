@@ -1,0 +1,149 @@
+<!DOCTYPE html><meta charset="UTF-8">
+<title><%=title%></title>
+<link rel="icon" href="<%=assets.favicon%>" type="image/png" />
+<%=manifest ? '<link rel="manifest" href="' + manifest + '">': ''%>
+<meta name="viewport" content="width=<%=width || 'device-width' %>, initial-scale=1.0">
+<div style="background:var(--wait-image) center no-repeat;height:160px"></div><div id="m" style="font:16px sans-serif;text-align:center"><%=title%> <%=version%><p id="p"></p></div>
+<i id="F"></i>
+<noscript><h1>Уф-уф</h1><p>Для работы приложения необходимо включить поддержку <b>JavaScript</b>.<p>Если ваш браузер не поддерживает JavaScript, воспользуйтесь тем, что поддерживает.</p></noscript>
+<script>
+    (function (a,S,w,d) {
+        w.AV = <%=JSON.stringify(version)%>;
+        var notSupports = [],  x, i;
+        x = {
+            Fetch: 'fetch("data:,")',
+            Async: 'async function(){}',
+            Lambda: 'r=>{}',
+            Class: 'class{}',
+            Promise: 'new Promise(function(r){r()}).finally(function(){})',
+            Ajax: 'new XMLHttpRequest()',
+            Generator: 'function* () {}',
+        }
+        for (i in x) {
+            if (x.hasOwnProperty(i)) {
+                try {
+                    eval('('+x[i]+')')
+                } catch (e) {
+                    notSupports.push(i+': '+e.message);
+                }
+            }
+        }
+        if (notSupports.length) {
+            d.body.innerHTML = '<h1>Уф-уф</h1><p>Ваш браузер не поддерживает необходимые технологи (' + notSupports.join('; ') + ').<p>Обновите браузер или используйте другой.<plaintext style=color:gray>' + navigator.userAgent;
+            return;
+        }
+
+        // Errors
+
+        var errorElement, errorHandler = function (e, f, l) {
+            if (!errorElement) {
+                errorElement = d.createElement("div");
+                errorElement.style = "z-index:999999999;white-space:pre-wrap;color:red;position:fixed;left:10px;top:10px;right:10px;bottom:10px;overflow:auto;padding:1em;background-color:rgba(255,255,255,.85);border:5px dashed red;font:16px sans-serif";
+                errorElement.innerHTML = '<h1>Ошибка при загрузке или запуске. Попробуйте обновить страницу.</h1>';
+            }
+            errorElement.appendChild(d.createTextNode('Ошибка запуска\n\n' + e + '\n' + f + '\n' + l + '\n\n'));
+            d.body.appendChild(errorElement);
+            clearTimeout(timeoutTimer);
+        }
+
+        w.onerror = errorHandler;
+
+        // Timeout
+
+        var timeoutTimer = setTimeout(function () {
+            if (w.onerror === errorHandler) {
+                var message = "\n\nЗагрузка продолжается слишком долго.\n\nВозможно что-то пошло не так.\n\nЕсли так и будет продолжаться,\nпопробуйте обновить страницу.";
+                var m = d.getElementById('m');
+                if (m) {
+                    m.innerHTML += message.replace(/\n/g, '<br>');
+                } else {
+                    alert(message)
+                }
+            }
+        }, 30000);
+
+        // Loader
+
+        var loaderStyle = [];
+        for (i = 0; i < 12; i++) {
+            loaderStyle.push('<rect transform="rotate(' + (30 * i) + ' 50 50)" x="49" y="22" rx="2.94" ry="1.32" width="2" height="16" opacity="0"><animate attributeName="opacity" values="1;0" dur="1.5s" begin="' + (i * 0.125) + '" repeatCount="indefinite" restart="always"></animate></rect>');
+        }
+        var style = d.createElement('style');
+        style.appendChild(d.createTextNode(':root{--wait-image: url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" shape-rendering="geometricPrecision">' + loaderStyle.join('') + '<rect x="0" y="0" width="0" height="0"><animate attributeName="x" values="0;0" dur="1s" begin="0" repeatCount="indefinite"/></rect></svg>\')}'))
+        d.head.appendChild(style);
+
+
+        // Assets
+        var L = [], T=0, p = d.getElementById('p');
+        for (i=0; i<a.length; i++) {
+            !function (ai, i, x, f, k, P) {
+                L.push(null);
+                P = 0;
+                x = new XMLHttpRequest();
+                x.open('get', ai);
+                x.onprogress = function (e) {
+                    // console.log(e.loaded * 100.0 / (e.total * a.length), e.loaded, e.total);
+                    T = T - P + (P = e.loaded);
+                    p.innerHTML = Math.round(T * 100.0 / S) + '%';
+                }
+                x.onerror = function (e) {
+                    throw Error("Ошибка загрузки (" + x.status + ") " + ai);
+                }
+                x.onload = function (e) {
+                    if (x.status != 200) {
+                        return x.onerror(e);
+                    }
+                    if (L) {
+                        if (/.js$/.test(ai)) {
+                            L[i] = function () {
+                                var s = d.createElement('script');
+                                s.appendChild(d.createTextNode(x.responseText));
+                                d.body.appendChild(s);
+                            }
+                        } else {
+                            var s = d.createElement('style');
+                            s.appendChild(d.createTextNode(x.responseText));
+                            d.head.appendChild(s);
+                            L[i] = true;
+                        }
+                        for (k=0; k<L.length; k++) {
+                            if (!L[k]) {
+                                return;
+                            }
+                        }
+                        var E = function () {
+                            for (k=0; k<L.length; k++) {
+                                if (typeof L[k] == "function") {
+                                    L[k]();
+                        }
+                            }
+                        }
+                        var H;
+                        if (w.Promise && d.fonts && d.fonts.ready && typeof d.fonts.ready.then === 'function') {
+                            p.innerHTML = 'Ещё чуть-чуть...';
+                            var promises = [];
+                            d.fonts.forEach(function (f) {
+                                promises.push(f.load().catch(function (r) {
+                                    errorHandler(r, 'Шрифт: ' + f.family + ' ' + f.weight);
+                                    return Promise.reject()
+                                }));
+                            })
+                            if (promises.length) {
+                                H = Promise.all(promises).then(E);
+                            }
+                        }
+                        if (!H) {
+                            E();
+                        }
+                    }
+                }
+                x.send();
+            }(a[i], i)
+        }
+    })(
+        <%=JSON.stringify(assetList)%>,
+        <%=JSON.stringify(assetSize)%>,
+        window,
+        document
+    );
+</script>

@@ -1,0 +1,6 @@
+.gradle
+.idea
+build
+devEnv
+node_modules
+db.sql

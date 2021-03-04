@@ -1,0 +1,113 @@
+@import "roboto.scss";
+
+:root {
+    --aColor: blue;
+
+    font-family: Roboto, sans-serif;
+    font-size: 14px;
+    /*line-height: 1.3em;*/
+    box-sizing: border-box;
+}
+
+* {
+    font-family: inherit;
+    font-size: inherit;
+    box-sizing: inherit;
+}
+
+.frame {
+    padding: 1em;
+}
+
+p, .p, h1, h2, h3, h4, h5, h6, ol, ul {
+    margin: 1em 0 0 0;
+    padding: 0;
+}
+
+.nonText {
+    + p, + .p, + h1, + h2, + h3, + h4, + h5, + h6, + .h {
+        margin-top: 0;
+    }
+}
+
+p, .p, h1, h2, h3, h4, h5, h6, .h, ol, ul {
+    &:first-child {
+        margin-top: 0;
+    }
+}
+
+li ol, li ul {
+    margin-top: .5em;
+}
+
+:empty + ol:first-child, :empty + ul:first-child {
+    margin-top: 0;
+}
+
+ol {
+    list-style-type: decimal;
+}
+
+ol ol {
+    list-style-type: lower-alpha;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    //font-family: "Roboto Slab", serif;
+    font-weight: 700;
+    /*line-height: 1.3em;*/
+}
+
+h1, .h1 {
+    font-size: 2em;
+}
+
+h2, .h2 {
+    font-size: 1.6em;
+}
+
+h3, .h3 {
+    font-size: 1.4em;
+}
+
+h4, .h4 {
+    font-size: 1.3em;
+}
+
+h5, .h5 {
+    font-size: 1.2em;
+}
+
+h6, .h6 {
+    font-size: 1.1em;
+}
+
+li {
+    margin: .5em 0 0 2em;
+}
+
+li:first-child {
+    margin-top: 0;
+}
+
+/* a[href] {
+   color: inherit;
+   color: var(--aColor);
+   text-decoration: underline;
+   cursor: pointer;
+ }
+*/
+a[href^="##"], a[href^="# "], a[href="#"] {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-style: solid;
+    //text-decoration-color: var(--baseIconBg);
+}
+@import "commonColors.scss";
+.Notes {
+    color: $Grey500;
+}
+.Descr {
+    font-size: 80%;
+    color: $Grey500;
+}

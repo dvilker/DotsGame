@@ -1,0 +1,92 @@
+:root {
+  --cGap: 16px;
+}
+
+$colCount: 12;
+$colSizes: (
+        "L",
+        "M",
+        "S"
+);
+
+.cols {
+  display: flex!important;
+  align-content: flex-start;
+  padding: calc(var(--cGap) / 2);
+}
+.cols:not(.cols-nw):not(.rows):not(.trio) {
+  flex-wrap: wrap;
+}
+
+.cols:not(.rows) > * {
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+.cols:not(.flow):not(.trio):not(.rows) > * {
+  width: calc(100% - var(--cGap));
+}
+
+.cols > * {
+  margin: calc(var(--cGap) / 2);
+  box-sizing: border-box;
+}
+
+.cols.cols.cols > .cols {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+@for $i from 1 through $colCount {
+  .cols > .c#{$i - 1}h {
+    width: calc(100% * #{($i - 1) * 2 + 1} / #{$colCount * 2} - var(--cGap))!important;
+  }
+  .cols > .c#{$i - 1}h.cols {
+    width: calc(100% * #{($i - 1) * 2 + 1} / #{$colCount * 2})!important;
+  }
+  .cols > .c#{$i} {
+    width: calc(100% * #{$i * 2} / #{$colCount * 2} - var(--cGap))!important;
+  }
+  .cols > .c#{$i}.cols {
+    width: calc(100% * #{$i * 2} / #{$colCount * 2})!important;
+  }
+}
+
+@each $name in $colSizes {
+  @for $i from 1 through $colCount {
+
+    .#{$name} .#{$name}c#{$i - 1}h {
+      width: calc(100% * #{($i - 1) * 2 + 1} / #{$colCount * 2} - var(--cGap))!important;
+    }
+    .#{$name} .cols > .#{$name}c#{$i - 1}h.cols,
+    .#{$name}.cols > .#{$name}c#{$i - 1}h.cols {
+      width: calc(100% * #{($i - 1) * 2 + 1} / #{$colCount * 2})!important;
+    }
+
+    .#{$name} .#{$name}c#{$i} {
+      width: calc(100% * #{$i * 2} / #{$colCount * 2} - var(--cGap))!important;
+    }
+    .#{$name} .cols > .#{$name}c#{$i}.cols,
+    .#{$name}.cols > .#{$name}c#{$i}.cols {
+      width: calc(100% * #{$i * 2} / #{$colCount * 2})!important;
+    }
+  }
+}
+
+.rows {
+  flex-flow: column nowrap;
+  max-height: 100%;
+}
+.rmin {
+  flex-basis: 0;
+}
+.rmax {
+  flex-basis: 100%;
+}
+.rscroll {
+  overflow: auto;
+}
+.trio > :not(.trio-left):not(.trio-right) {
+  flex-basis: 100%;
+  flex-shrink: 1;
+}

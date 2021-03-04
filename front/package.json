@@ -1,0 +1,40 @@
+{
+  "private": true,
+  "scripts": {
+    "dev-debug": "node --inspect-brk ./node_modules/.bin/webpack --devtool none --mode development",
+    "prod-debug": "node --inspect-brk ./node_modules/.bin/webpack --mode production",
+    "dev-server": "./node_modules/.bin/webpack-cli serve --watch --mode development",
+    "prod": "./node_modules/.bin/webpack --mode production"
+  },
+  "devDependencies": {
+    "webpack": "*",
+    "webpack-cli": "*",
+    "webpack-dev-server": "*",
+    "webpack-merge": "*",
+    "webpack-pwa-manifest": "*",
+    "module-alias": "*",
+    "url-loader": "*",
+    "@vue/compiler-sfc": "*",
+    "vue-loader": "^16.0.0-beta.9",
+    "@babel/core": "*",
+    "@babel/plugin-syntax-dynamic-import": "*",
+    "@babel/preset-env": "*",
+    "babel-loader": "*",
+    "clean-webpack-plugin": "*",
+    "compression-webpack-plugin": "*",
+    "css-loader": "*",
+    "file-loader": "*",
+    "html-loader": "*",
+    "html-webpack-plugin": "*",
+    "mini-css-extract-plugin": "*",
+    "sass": "*",
+    "optimize-css-assets-webpack-plugin": "*",
+    "sass-loader": "*",
+    "simple-functional-loader": "*",
+    "style-loader": "*",
+    "terser-webpack-plugin": "*"
+  },
+  "dependencies": {
+    "vue": "^3.0.2"
+  }
+}

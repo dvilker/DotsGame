@@ -1,0 +1,64 @@
+<meta charset="UTF-8"/>
+<style>
+    * {
+        font-family: sans-serif;
+    }
+</style>
+<form id="f">
+<input id="a" pattern="\d"> Вчера Сегодня Завтра &times;
+<input id="b" pattern="\d"> &times;
+</form>
+<button onclick="(x=>{x.setCustomValidity('!!!'); x.reportValidity(); x.focus()})(document.getElementById('a'))">!!</button>
+<button onclick="(x=>{ x.pattern ? x.removeAttribute('pattern') : x.setAttribute('pattern', '\\d')})(document.getElementById('a'))">toggle</button>
+<script>
+    document.getElementById('f').addEventListener('submit', ev => {
+        console.log('submit', ev);
+        ev.preventDefault()
+    })
+    let a = document.getElementById('a')
+    let b = document.getElementById('b')
+    for (let k in a) {
+        if (k.startsWith('on') && !k.startsWith('onmouse')&& !k.startsWith('onpointer')) {
+            a[k] = function (e) {
+                console.log("EV", e.type, e)
+            }
+        }
+    }
+
+    a.oninvalid = function (e) {
+        console.log("INVALID", e, e.target.validity)
+    }
+
+    const checkValidity0 = HTMLInputElement.prototype.checkValidity
+    function checkValidity1() {
+        checkValidity0.apply(this, arguments)
+        console.log("CV")
+    }
+    HTMLInputElement.prototype.checkValidity = checkValidity1
+
+    const setCustomValidity0 = HTMLInputElement.prototype.setCustomValidity
+    function setCustomValidity1() {
+        setCustomValidity0.apply(this, arguments)
+        this.classList.toggle('invalid', !this.validity.valid)
+    }
+    HTMLInputElement.prototype.setCustomValidity = setCustomValidity1
+
+    a.addEventListener('input', ev => {
+        a.classList.toggle('invalid', !a.validity.valid)
+    })
+
+
+    var observer = new MutationObserver(function(mutations) {
+        a.classList.toggle('invalid', !a.validity.valid)
+    });
+
+    observer.observe(a, {attributes: true});
+</script>
+<style>
+    input:invalid {
+        box-shadow: 0 0 1em red;
+    }
+    input.invalid {
+        color: red;
+    }
+</style>

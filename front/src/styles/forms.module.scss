@@ -1,0 +1,234 @@
+$BorderColor: #bbb;
+$BorderColorDisabled: #ccc;
+$BorderColorFocused: black;
+$BorderColorError: red;
+
+$Color: black;
+$ColorDisabled: #ccc;
+$ColorNotes: gray;
+$ColorError: red;
+
+$BgColor: white;
+$BgColorDisabled: rgba(#ccc, .2);
+
+$InputPadding: .5em;
+
+$ButtonBgColorTop: #f6f6f6;
+$ButtonBgColorBottom: adjust-color($ButtonBgColorTop, $lightness: -10%);
+
+/**
+    Заставляет элементы форму внутри .FBlock расширяться на 100%
+ */
+.FBlock, .cols {
+    --f0: border-box;
+    --f1: 100%;
+    --f2: flex;
+    --f3: block;
+}
+
+/**
+    Отменяет FBlock
+ */
+.FInline {
+    --f0: '';
+    --f1: '';
+    --f2: inline-flex;
+    --f3: inline-block;
+}
+
+.FBlock, .cols, .FInline {
+    input, select, textarea, button {
+        &:not(.FHandled) {
+            box-sizing: var(--f0);
+            width: var(--f1);
+        }
+    }
+}
+
+.FCaption {
+    color: $Color;
+    .FDisabled & {
+        color: $ColorDisabled;
+    }
+}
+
+.FNotes {
+    color: $ColorNotes;
+    font-size: .8em;
+    .FDisabled & {
+        color: $ColorDisabled;
+    }
+}
+
+.FLabel {
+    display: var(--f3, inline-block);
+}
+
+.FError {
+    color: red;
+}
+
+.FDisabled {
+    color: $ColorDisabled;
+    * {
+        color: inherit;
+    }
+}
+
+.FRadio, .FCheck {
+    display: var(--f3, inline);
+}
+
+.FInputBox {
+    display: var(--f2, inline-flex);
+    flex-wrap: nowrap;
+    color: $Color;
+    background-color: $BgColor;
+    border: 1px solid $BorderColor;
+
+    &:focus-within {
+        border-color: $BorderColorFocused;
+    }
+    &.FErroneous {
+        border-color: $BorderColorError;
+    }
+    .FDisabled & {
+        border-color: $BorderColorDisabled;
+        color: $ColorDisabled;
+        background-color: $BgColorDisabled;
+    }
+    // input
+    .FInputBox_input {
+        color: inherit;
+        background-color: transparent;
+        flex-basis: 100%;
+        border: none;
+        outline: none;
+    }
+    *::placeholder {
+        color: $ColorDisabled;
+        .FDisabled & {
+            opacity: .5;
+        }
+    }
+
+    button {
+        outline: none;
+        cursor: pointer;
+        box-sizing: border-box;
+
+        margin-left: 1px;
+        padding: 0 $InputPadding;
+        min-width: 1.5em;
+
+        white-space: nowrap;
+        flex-shrink: 0;
+
+        transition: border 200ms;
+        border: none;
+        background: transparent;
+        &:active, &.FBtn_active {
+            transform: translateY(1px);
+        }
+        position: relative;
+
+        .FBtn_key {
+            position: absolute;
+            left: 0;
+            right: 0;
+            margin-top: -6px;
+            top: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: .8em;
+            &:disabled {
+                color: $ColorDisabled;
+            }
+            span {
+                box-sizing: border-box;
+                display: inline-block;
+                color: $ColorNotes;
+                background: $BgColor;
+                line-height: 1em;
+                max-width: 100%;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+        }
+    }
+}
+
+input.FHandled, select.FHandled, textarea.FHandled, .FButton {
+    padding: $InputPadding;
+}
+
+.FErroneous {
+    //border: $InputBorderError
+}
+
+
+.FSubmitWait {
+
+}
+
+
+.FButton {
+    background: linear-gradient(180deg, $ButtonBgColorTop, $ButtonBgColorBottom);
+    border: 1px solid $BorderColor;
+    color: $Color;
+    outline: none;
+    border-radius: .3em;
+    position: relative;
+
+    &:active {
+        background: mix($ButtonBgColorTop, $ButtonBgColorBottom, 50%)
+    }
+    &:focus-within {
+        border-color: $BorderColorFocused;
+    }
+    &.FErroneous {
+        border-color: $BorderColorError;
+    }
+    .FDisabled &, &:disabled {
+        border-color: $BorderColorDisabled;
+        color: $ColorDisabled;
+        background: $BgColorDisabled;
+    }
+    &[type=submit] {
+        font-weight: bold;
+    }
+    @keyframes FButton_wait {
+        from {
+            background-position-x: 0;
+        }
+        to {
+            background-position-x: 50px;
+        }
+    }
+    &.FSubmitWait {
+        background: linear-gradient(90deg, $BgColorDisabled, adjust-color($BgColorDisabled, $lightness: -15%), $BgColorDisabled);
+        background-size: 50px;
+        animation: FButton_wait 500ms linear infinite;
+
+        //&:after {
+        //    content: '';
+        //    background-image: var(--wait-image);
+        //    background-position: center;
+        //    background-repeat: no-repeat;
+        //    background-size: contain;
+        //    position: absolute;
+        //    left: 0;
+        //    right: 0;
+        //    bottom: 0;
+        //    top: 0;
+        //}
+    }
+}
+
+
+
+
+
+.FPic_circle {
+    border-radius: 100%;
+}

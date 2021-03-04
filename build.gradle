@@ -1,0 +1,377 @@
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.4.30"
+    id "java"
+    id "war"
+}
+group = "ru.dotsgame"
+version = "0.1"
+
+repositories {
+    mavenCentral()
+}
+
+
+project.ext.entitiesGeneratedDir = project.file('build/gen/entities')
+project.ext.thingsGeneratedDir = project.file('build/gen/things')
+project.ext.thingsGeneratedResDir = project.file('build/gen/thingsRes')
+
+sourceSets {
+    main {
+        java.srcDirs = []
+        kotlin.srcDirs = ["src", entitiesGeneratedDir]
+        resources.srcDirs = ["res"]
+        compileKotlin {
+            kotlinOptions.jvmTarget = "1.8"
+        }
+    }
+    entities {
+        java.srcDirs = []
+        resources.srcDirs = []
+        kotlin.srcDirs = ['entities']
+    }
+
+    thingsGenerated {
+        java.srcDirs = []
+        resources.srcDirs = [thingsGeneratedResDir]
+        resources.exclude '**/*.kt'
+        kotlin.srcDirs = [thingsGeneratedDir]
+    }
+
+
+
+    jettyServer {
+        java.srcDirs = []
+        kotlin.srcDirs = ["jetty/server"]
+        resources.srcDirs = []
+
+        compileKotlin {
+            kotlinOptions.jvmTarget = "1.8"
+        }
+    }
+
+    test {
+        java.srcDirs = []
+        kotlin.srcDirs = []
+        resources.srcDirs = []
+    }
+}
+
+processJettyServerResources {
+    from("version.txt")
+    into("front") {
+        from('front/root')
+        from('build/front')
+    }
+}
+
+task mainJar(type: Jar) {
+    dependsOn classes
+    group "build"
+    duplicatesStrategy DuplicatesStrategy.WARN
+    from sourceSets.main.output
+    archiveFileName = 'DotsServer.jar'
+}
+
+task entitiesJar(type: Jar) {
+    dependsOn entitiesClasses
+    group "build"
+    duplicatesStrategy DuplicatesStrategy.WARN
+    from sourceSets.entities.output
+    archiveFileName = 'DotsServerEntities.jar'
+}
+
+task thingsJar(type: Jar) {
+    dependsOn thingsGeneratedClasses
+    group "build"
+    duplicatesStrategy DuplicatesStrategy.WARN
+    from sourceSets.thingsGenerated.output
+    archiveFileName = 'DotsServerThings.jar'
+}
+
+task libZip(type: Zip) {
+    dependsOn jettyServerClasses
+    dependsOn classes
+    dependsOn entitiesClasses
+    dependsOn thingsGeneratedClasses
+    group "build"
+    duplicatesStrategy DuplicatesStrategy.WARN
+    entryCompression ZipEntryCompression.DEFLATED
+    preserveFileTimestamps false
+
+    archiveFileName = project.file('build/libs/DotsServerLib.zip').absolutePath
+
+    afterEvaluate {
+        (
+                (
+                        sourceSets.jettyServer.runtimeClasspath +
+                                sourceSets.main.runtimeClasspath +
+                                sourceSets.entities.runtimeClasspath +
+                                sourceSets.thingsGenerated.runtimeClasspath
+                ) - configurations.providedRuntime
+        ).filter { it.isFile() }.sort { it.toString() }.forEach() { jar ->
+            from(jar)
+        }
+    }
+}
+
+task jettyJar(type: Jar) {
+    dependsOn mainJar
+    dependsOn entitiesJar
+    dependsOn thingsJar
+
+    group "build"
+    duplicatesStrategy DuplicatesStrategy.WARN
+    from sourceSets.jettyServer.output
+
+    manifest {
+        attributes 'Main-Class': 'Main'
+    }
+//    exclude 'META-INF/*.kotlin_module'
+    archiveFileName = 'DotsServerJetty.jar'
+    doFirst {
+        delete('build/libs/ROOT.tar.xz')
+    }
+}
+task explodedJettyJar(type: Sync) {
+    into "$buildDir/libs/ROOT"
+    with jettyJar
+    group = 'build'
+    dependsOn(jettyJar)
+}
+
+
+war {
+    duplicatesStrategy DuplicatesStrategy.WARN
+    classpath = (
+            sourceSets.main.runtimeClasspath +
+                    sourceSets.entities.runtimeClasspath +
+                    sourceSets.thingsGenerated.runtimeClasspath
+    ) - configurations.providedRuntime
+
+    dependsOn entitiesClasses
+    dependsOn thingsGeneratedClasses
+
+    archiveFileName = 'ROOT.war'
+    project.webAppDirName = 'front/root'
+    from 'build/front'
+    webXml file('web.xml')
+    from('version.txt') {
+        into('WEB-INF/classes')
+    }
+}
+
+task explodedWar(type: Sync) {
+    into "$buildDir/libs/exploded/${war.archiveFileName.get()}"
+    with war
+    group = 'build'
+    dependsOn(war)
+}
+
+dependencies {
+    implementation "javax.mail:mail:1.4.7"
+    compileOnly "javax.servlet:javax.servlet-api:4.0.1"
+    compileOnly "javax.websocket:javax.websocket-api:1.1"
+    implementation "org.eclipse.jetty.websocket:websocket-server:9.4.+"
+    implementation 'org.postgresql:postgresql:42.2.8'
+
+    implementation "Mys:zUtils"
+    implementation "Mys:zApi"
+    api "Mys:zDb"
+
+    implementation sourceSets.entities.compileClasspath
+    implementation sourceSets.entities.output
+
+    entitiesImplementation "Mys:zApi"
+    entitiesImplementation "Mys:zUtils"
+    entitiesApi "Mys:zDb"
+
+    thingsGeneratedImplementation sourceSets.main.runtimeClasspath
+
+    jettyServerImplementation "Mys:zUtils"
+    jettyServerImplementation sourceSets.thingsGenerated.runtimeClasspath
+    jettyServerImplementation sourceSets.main.runtimeClasspath
+    jettyServerImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.+'
+    jettyServerImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.+'
+}
+
+
+
+
+
+task zDbGenerate {
+    dependsOn(entitiesClasses)
+    compileKotlin.dependsOn(zDbGenerate)
+
+    inputs.files sourceSets.entities.output.files
+    outputs.dir entitiesGeneratedDir
+    outputs.dir thingsGeneratedDir
+    doLast {
+        new URLClassLoader(
+                (
+                        sourceSets.entities.output.files
+                                + sourceSets.entities.runtimeClasspath.files
+                ).collect { it.toURI().toURL() } as URL[],
+                this.getClass().getClassLoader()
+        ).loadClass("zDb.EntityProcessor").newInstance().with {
+            it.sourcePackageName = "dotsgame"
+            it.outputDir = entitiesGeneratedDir
+            it.suffixFileName = project.file("entitySuffixes.txt").absolutePath
+            it.thingsClassName = "dotsgame.DbThings"
+            it.thingsOutputDir = thingsGeneratedDir
+            it.thingsResOutputDir = thingsGeneratedResDir
+            it.apply()
+        }
+    }
+}
+
+
+
+task zApiGenerate {
+    dependsOn(entitiesClasses)
+    dependsOn(classes)
+    compileThingsGeneratedKotlin.dependsOn(zApiGenerate)
+
+    inputs.files sourceSets.main.output.files
+    inputs.files sourceSets.entities.output.files
+    outputs.dir thingsGeneratedDir
+    outputs.file file('front/src/api2.js')
+    doLast {
+        new URLClassLoader(
+                (
+                        sourceSets.entities.output.files
+                                + sourceSets.entities.runtimeClasspath.files
+                                + sourceSets.main.output.files
+                                + sourceSets.main.runtimeClasspath.files
+                ).collect { it.toURI().toURL() } as URL[],
+                this.getClass().getClassLoader()
+        ).loadClass("zApi.ApiProcessor").newInstance().with {
+            apply(
+                    sourcePackageNames: ["dotsgame"],
+                    thingsClassName: "dotsgame.ApiThings",
+                    thingsOutputDir: thingsGeneratedDir,
+                    thingsResOutputDir: thingsGeneratedResDir,
+                    apiEnabled: true,
+                    settingsEnabled: true,
+                    formEnabled: true,
+                    jsExports: [
+                            jsExport(
+                                    outputFile: file('front/src/api.js'),
+                                    importModule: "./common/api0"
+                            )
+                    ]
+            )
+        }
+    }
+}
+
+processJettyServerResources {
+    from("../version.txt")
+    into("front") {
+        from('front/root')
+        from('build/front')
+    }
+}
+
+task webpack(type: Exec) {
+    group "build"
+    dependsOn zApiGenerate
+    inputs.dir file("front")
+    outputs.dir file("build/front")
+    commandLine "yarn", "run", "prod"
+    workingDir file("front")
+    doFirst {
+        delete('build/front')
+    }
+}
+
+//
+//task precompressionWeb(type: Exec) {
+//    dependsOn webpack
+//    inputs.dir file("build/front")
+//    outputs.dir file("build/front")
+//    commandLine "gzip", "-nkqr9", file("build/front").absolutePath + "/"
+//    workingDir file("front")
+//    doFirst {
+//        delete('build/front/*.gz')
+//    }
+//}
+
+if (gradle.startParameter.taskNames.contains('webpack')) {
+    processJettyServerResources.dependsOn(webpack)
+//    processJettyServerResources.dependsOn(precompressionWeb)
+}
+
+
+task uploadToProduction(type: Exec) {
+    dependsOn jettyJar
+    dependsOn libZip
+    workingDir file("build/libs")
+
+    doFirst {
+        file("build/libs/DotsServer.sh").withPrintWriter { out ->
+            out.println("""#!/bin/bash -xe""")
+            out.println("""pushd "\$(dirname "\$0")" > /dev/null""")
+            out.println("""unzip -qqo *.zip""")
+            out.println("""unzip -qqo DotsServerJetty.jar "front/*" "version.txt" """)
+            out.println("""rm -f *.zip""")
+            out.println("""rm -f *.sh""")
+            out.println("""popd > /dev/null""")
+        }
+    }
+
+    // Возможно с помощью rsync быстрее
+    commandLine "bash", "-xec", "rm -f DotsServer.txt && sha256sum -b DotsServer*.* > DotsServer.txt && rsync -ar --delete --include='DotsServer*.*' --exclude='*' ./ dots@vilker.ru:.DotsApp"
+//    commandLine "bash", "-xec", "git tag -f v`cat ../../version.txt` && rm -f DotsServer.txt && sha256sum -b DotsServer*.* > DotsServer.txt && rsync -ar --delete --include='DotsServer*.*' --exclude='*' ./ dots@vilker.ru:dist"
+}
+
+
+String getVersion() {
+    def file = project.file('version.txt')
+    if (file.exists()) {
+        def ver = file.text.trim()
+        if (ver != "") {
+            return ver
+        }
+    }
+    return "1.00000"
+}
+version getVersion()
+
+task incVersion {
+    /*
+    Увеличивает номер билда в файле version.txt
+
+    Общая версия состоит из A.Bc, где
+        A - версия (увеличивается редко),
+        B - номер билда (ГГММДД),
+        c - номер билда в один день (a, b, c, ...)
+     */
+    doLast {
+        def ver = getVersion()
+        def now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMdd"))
+        def newVersion = ver.replaceFirst("(\\d+\\.)(\\d+)([a-z]?)", {
+            def oldNow = it.get(2)
+            if (oldNow != now) {
+                it.get(1) + now
+            } else {
+                def ch = it.get(3)
+                if (ch) {
+                    def newCh = (char)(ch.charAt(0) + 1)
+                    if (newCh > (char)'z') {
+                        throw new Exception("Слишком много версий на сегодня!")
+                    }
+                    it.get(1) + now + newCh
+                } else {
+                    it.get(1) + now + 'a'
+                }
+            }
+
+        })
+        println("Version: " + ver + ' -> ' + newVersion)
+        project.file("version.txt").setText(newVersion, "UTF-8")
+        version getVersion()
+    }
+}

@@ -1,0 +1,8 @@
+<!DOCTYPE html><html lang=ru><meta charset=UTF-8><title>Точки</title><p id=p> </p><p><a href="/">В игру!</a></p>
+<script>
+    document.title += ' - ' + (document.getElementById('p').innerText = {
+        P1: 'Пароль успешно изменен!',
+        R1: 'Вы успешно зарегистрированы!',
+        E1: 'Неверная или устаревшая ссылка!'
+    }[decodeURIComponent(document.location.hash).replace(/^#/,'')] || '')
+</script>
