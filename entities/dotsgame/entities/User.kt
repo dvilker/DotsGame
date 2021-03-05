@@ -1,5 +1,8 @@
 package dotsgame.entities
 
+import dotsgame.enums.RuleSize
+import dotsgame.enums.RuleStart
+import dotsgame.enums.RuleTimer
 import dotsgame.enums.UserLevel
 import zDb.entities.annotations.Defaulted
 import zDb.entities.annotations.EntityInfo
@@ -22,7 +25,9 @@ interface User : ITitled {
             default(User::active, true)
             default(User::level, UserLevel.N)
             default(User::score, 1200)
-            default(User::rules, "STANDARD")
+            default(User::ruleSize, RuleSize.default)
+            default(User::ruleStart, RuleStart.default)
+            default(User::ruleTimer, RuleTimer.default)
 
             default(User::battleCount, 0)
             default(User::winCount, 0)
@@ -152,10 +157,9 @@ interface User : ITitled {
     var looseByFillCount: Int
     var looseLineCount: Int
 
-    /**
-     * Выбранные правила
-     */
-    var rules: String
+    var ruleSize: RuleSize
+    var ruleStart: RuleStart
+    var ruleTimer: RuleTimer
 }
 
 fun User?.isSysAdmin(): Boolean = this != null && roles.isNotEmpty() && roles.any { it.isSysAdmin }

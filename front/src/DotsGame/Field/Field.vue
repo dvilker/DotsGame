@@ -145,7 +145,7 @@ export default {
     },
     data() {
         // let moves = '0010C8ihjikhjhjgkglhlgmgmflfkflejeifmhnglineiemdkj!1of!1hfiggihggfghfhfifghigjhjhh!2gkfjhlei!1hohngngmhminfmgofl!1foencoeoepfpgpdpfq!1docqdqdrcrercpbqbpapaqbrao9pbn9o9n8n9m8mak9j8k9k9l8lbjbiaiaj9i8j7kbkcjal!1cibhchckdkcg7idjbgdh!1jlkmkllllmlkjmknjnjo!1onetesdsfsdudtcuctbubtauat9u9t7u8u8t7t6u8s!18v5s6t6s4t4q4s5r3q4o3n5m4n5n5o5p6o3o2o2p3p4p3r2n1o3m7n4l!1jsjririshshriqgshtitguhugteuftgvfufv!1kqkrlplqmompnnnoommnmmnm!1nlolpmnkmlojohnhnioiphqjqiqkrjrlslrmsnqnpnpornpi!1qpriqhsjrksk!1sfrgqgqfrfperhsh!1jcjdidkdjbichcibhbiahdhafbeaebdadbcacbbbbcabac9c9d8d9e8e8c9b7bb98f7f7e7d6e9f8g6c6d7c8b6g5c6b5a7a8a899a98a9a8!16f7g5g6h5j7j6l6k5k5l5i5h4h5f4g5d5e4e!17lg9faf9!1tptruqxpvpwquoulxiyhxnup!2wmvoyowozpvqyq11vcwcxcybwbxbwd!1vducv9w9x7d4c4a4d5b6e5g6f4h4e3g3d292c3!1m6l5p5p6q5q6r7r5v6q4u4p4p2o4o2o5!1oap9o8vnvmumunwsxqxswrvsvr!1tntmsoto!1rotktlujsm!1qorprqsrsq!1rsustsutstttvtss!2uruvuututvsvsu!1ooop!1npnq!1mqmr!1lrls!1ksktjtju!1oqpqorprpsosotns!1ouptqsqtqrovpupvquqvrurvmununtmt!1n4m5n5n3o3r3s2s3t3r2r1q2q1s6s7t6u7u6v5t7t8q8q7p8p7o7n7!1'
-        let mover = new Mover(this.battle.rules.width, this.battle.rules.height, this.cellSize)
+        let mover = new Mover(this.battle.rules.size.width, this.battle.rules.size.height, this.cellSize)
         mover.follow(this.battle.moves)
         return {
             mover,
@@ -196,11 +196,11 @@ export default {
         startTimer() {
             let battle = this.battle
             let elapsed = Date.now() - battle.moveStartTimeLocal
-            if (elapsed > battle.rules.moveTime * 1000) {
+            if (elapsed > battle.rules.timer.moveTime * 1000) {
                 this.moveTime = 0
-                this.moveTimeExtra = Math.ceil((elapsed - battle.rules.moveTime * 1000) / 1000)
+                this.moveTimeExtra = Math.ceil((elapsed - battle.rules.timer.moveTime * 1000) / 1000)
             } else {
-                this.moveTime = Math.floor((battle.rules.moveTime * 1000 - elapsed) / 1000)
+                this.moveTime = Math.floor((battle.rules.timer.moveTime * 1000 - elapsed) / 1000)
                 this.moveTimeExtra = 0
             }
             this.nowTimer = setTimeout(
@@ -294,10 +294,10 @@ export default {
             return null
         },
         cols() {
-            return this.battle.rules.width
+            return this.battle.rules.size.width
         },
         rows() {
-            return this.battle.rules.height
+            return this.battle.rules.size.height
         },
         width() {
             return (this.cols - 1) * 20

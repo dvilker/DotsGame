@@ -224,7 +224,9 @@ class Context private constructor(
                 User::pic,
                 User::level,
                 User::score,
-                User::rules,
+                User::ruleSize,
+                User::ruleStart,
+                User::ruleTimer,
             )
         }
     }
@@ -339,7 +341,9 @@ class Context private constructor(
                 User::pic,
                 User::level,
                 User::score,
-                User::rules,
+                User::ruleSize,
+                User::ruleStart,
+                User::ruleTimer,
             ) ?: return null
             if (user.token != split[1]) {
                 return null
@@ -361,7 +365,9 @@ class Context private constructor(
                 User::pic,
                 User::level,
                 User::score,
-                User::rules,
+                User::ruleSize,
+                User::ruleStart,
+                User::ruleTimer,
                 if (withToken) User::token else null
             ).getOrNull() ?: return null
             if (user.password != getUserPasswordHash(user.id, password)) {

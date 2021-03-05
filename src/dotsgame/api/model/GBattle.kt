@@ -5,6 +5,7 @@ import dotsgame.entities.Room
 import dotsgame.entities.User
 import dotsgame.entities.newBattle
 import dotsgame.enums.BattleOver
+import dotsgame.enums.RuleStart
 import dotsgame.server.Context
 import zDb.find
 import zDb.finder.equalsAny
@@ -16,6 +17,7 @@ import zUtils.badUnknownParam
 import zUtils.myjson.JsonTransient
 import java.time.LocalDateTime
 import kotlin.math.roundToInt
+import kotlin.random.Random
 
 class GBattle(
     val side0: Side,
@@ -153,7 +155,10 @@ class GBattle(
                 capturedPoints = DiList(side0.points, side1.points),
                 scoreChange = scoreChange,
                 scoreBefore = sideUsers.map { it.score },
-                levels = sideUsers.map { it.level }
+                levels = sideUsers.map { it.level },
+                ruleSize = rules.size,
+                ruleStart = rules.start,
+                ruleTimer = rules.timer,
             )
             battle.acquireId(id)
             room.battle = battle
@@ -213,7 +218,48 @@ class GBattle(
         else -> badAlgorithm()
     }
 
+    fun randomMove(): Boolean {
+        var tryCount = 0
+        put@while (tryCount < 100) {
+            tryCount++
+            val x = Random.nextInt(0, rules.size.width)
+            val y = Random.nextInt(0, rules.size.height)
+            if (field.dotSide(x, y) != -1) {
+                continue@put
+            }
+            move(x, y)
+            return true
+        }
+        var count = 0
+        for(x in 0 until rules.size.width) {
+            for(y in 0 until rules.size.height) {
+                if (field.dotSide(x, y) != -1) {
+                    count++
+                }
+            }
+        }
+        if (count == 0) {
+            return false
+        }
+        val move = Random.nextInt(count)
+        for(x in 0 until rules.size.width) {
+            for(y in 0 until rules.size.height) {
+                if (field.dotSide(x, y) != -1) {
+                    if (--count == move) {
+                        move(x, y)
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
+
     fun move(x: Int, y: Int) {
+        move(x, y, false)
+    }
+
+    private fun move(x: Int, y: Int, internal: Boolean) {
         val cap = field.addMove(x, y)
         val offset = moves.length
         moves.append(x.to62())
@@ -223,41 +269,53 @@ class GBattle(
             moves.append(cap)
         }
         syncField()
-
-        val now = System.currentTimeMillis()
-        if (now > moveStartTime + rules.moveTime * 1000) {
-            val minus = now - (moveStartTime + rules.moveTime * 1000)
-            val oppSide = oppSide()
-            oppSide.totalTime = maxOf(
-                0,
-                oppSide.totalTime - if (minus % 1000 == 0L) {
-                    (minus / 1000).toInt()
-                } else {
-                    (minus / 1000 + 1).toInt()
+        if (!internal) {
+            val now = System.currentTimeMillis()
+            if (now > moveStartTime + rules.timer.moveTime * 1000) {
+                val minus = now - (moveStartTime + rules.timer.moveTime * 1000)
+                val oppSide = oppSide()
+                oppSide.totalTime = maxOf(
+                    0,
+                    oppSide.totalTime - if (minus % 1000 == 0L) {
+                        (minus / 1000).toInt()
+                    } else {
+                        (minus / 1000 + 1).toInt()
+                    }
+                )
+            } else if (rules.timer.addUnused) {
+                val plus = moveStartTime + rules.timer.moveTime * 1000 - now
+                if (plus > 0) {
+                    val oppSide = oppSide()
+                    oppSide.totalTime = oppSide.totalTime + if (plus % 1000 == 0L) {
+                        (plus / 1000).toInt()
+                    } else {
+                        (plus / 1000 + 1).toInt()
+                    }
                 }
+            }
+            moveStartTime = now
+
+            val event = EvBattleMove(
+                id,
+                offset,
+                moves.subSequence(offset, moves.length),
+                this.moveSide,
+                this.side0.points,
+                this.side1.points,
+                this.side0.totalTime,
+                this.side1.totalTime,
+                now
             )
+            Context.broadcastEvent(event) { it.game.room?.id == roomId }
+
+            checkWinByGround(this.moveSide)
+            checkWinByGround(1 - this.moveSide)
         }
-        moveStartTime = now
-
-        val event = EvBattleMove(
-            id,
-            offset,
-            moves.subSequence(offset, moves.length),
-            this.moveSide,
-            this.side0.points,
-            this.side1.points,
-            this.side0.totalTime,
-            this.side1.totalTime,
-            now
-        )
-        Context.broadcastEvent(event) { it.game.room?.id == roomId }
-
-        checkWinByGround(this.moveSide)
-        checkWinByGround(1 - this.moveSide)
     }
 
     @JsonTransient
-    val moves = StringBuilder("ifjfjeie")
+    val moves = StringBuilder()
+
 //    val moves = StringBuilder("tptqsqsptrrquq!1srrrtsrpurusvqvpuptnto!1soqluorlwqslvrtlttulssvl")
 //    val moves = StringBuilder("0010C8ihjikhjhjgkglhlgmgmflfkflejeifmhnglineiemdkj!1of!1hfiggihggfghfhfifghigjhjhh!2gkfjhlei!1hohngngmhminfmgofl!1foencoeoepfpgpdpfq!1docqdqdrcrercpbqbpapaqbrao9pbn9o9n8n9m8mak9j8k9k9l8lbjbiaiaj9i8j7kbkcjcmdial!1dkcs!1dhclcn!1chcgdgbgefcejljkkkkl")
 //    val moves = StringBuilder("0010C8ihjikhjhjgkglhlgmgmflfkflejeifmhnglineiemdkj!1of!1hfiggihggfghfhfifghigjhjhh!2gkfjhlei!1hohngngmhminfmgofl!1foencoeoepfpgpdpfq!1docqdqdrcrercpbqbpapaqbrao9pbn9o9n8n9m8mak9j8k9k9l8lbjbiaiaj9i8j7kbkcjal!1cibhchckdkcg7idjbgdh!1jlkmkllllmlkjmknjnjo!1onetesdsfsdudtcuctbubtauat9u9t7u8u8t7t6u8s!18v5s6t6s4t4q4s5r3q4o3n5m4n5n5o5p6o3o2o2p3p4p3r2n1o3m7n4l!1jsjririshshriqgshtitguhugteuftgvfufv!1kqkrlplqmompnnnoommnmmnm!1nlolpmnkmlojohnhnioiphqjqiqkrjrlslrmsnqnpnpornpi!1qpriqhsjrksk!1sfrgqgqfrfperhsh!1jcjdidkdjbichcibhbiahdhafbeaebdadbcacbbbbcabac9c9d8d9e8e8c9b7bb98f7f7e7d6e9f8g6c6d7c8b6g5c6b5a7a8a899a98a9a8!16f7g5g6h5j7j6l6k5k5l5i5h4h5f4g5d5e4e!17lg9faf9!1tptruqxpvpwquoulxiyhxnup!2wmvoyowozpvqyq11vcwcxcybwbxbwd!1vducv9w9x7d4c4a4d5b6e5g6f4h4e3g3d292c3!1m6l5p5p6q5q6r7r5v6q4u4p4p2o4o2o5!1oap9o8vnvmumunwsxqxswrvsvr!1tntmsoto!1rotktlujsm!1qorprqsrsq!1rsustsutstttvtss!2uruvuututvsvsu!1ooop!1npnq!1mqmr!1lrls!1ksktjtju!1oqpqorprpsosotns!1ouptqsqtqrovpupvquqvrurvmununtmt!1n4m5n5n3o3r3s2s3t3r2r1q2q1s6s7t6u7u6v5t7t8q8q7p8p7o7n7!1")
@@ -267,7 +325,7 @@ class GBattle(
 
     @JsonTransient
     val field = run {
-        val field = GBattleField(rules.width, rules.height)
+        val field = GBattleField(rules.size.width, rules.size.height)
         for (i in moves.indices step 2) {
             val mx = moves[i]
             if (mx == '!') {
@@ -279,6 +337,84 @@ class GBattle(
             field.addMove(x, y)
         }
         field
+    }
+
+
+    init {
+        when (rules.start) {
+            RuleStart.EMPTY -> {}
+            RuleStart.CROSS -> {
+                val x = rules.size.width / 2 - 1
+                val y = rules.size.height / 2 - 1
+                move(x, y, true)
+                move(x + 1, y, true)
+                move(x + 1, y + 1, true)
+                move(x, y + 1, true)
+            }
+            RuleStart.CROSS2 -> {
+                val x = rules.size.width / 2 - 2
+                val y = rules.size.height / 2 - 1
+                move(x + 0, y + 0, true)
+                move(x + 0, y + 1, true)
+                move(x + 1, y + 1, true)
+                move(x + 1, y + 0, true)
+                move(x + 2, y + 1, true)
+                move(x + 2, y + 0, true)
+                move(x + 3, y + 0, true)
+                move(x + 3, y + 1, true)
+            }
+            RuleStart.CROSS4, RuleStart.CROSS4R -> {
+                val x = rules.size.width / 2
+                val y = rules.size.height / 2
+                val tx = if (rules.size.width < 20) rules.size.width % 2 else 0
+                val ty = if (rules.size.height < 20) rules.size.height % 2 else 0
+                val rand = rules.start == RuleStart.CROSS4R
+                for(dx0 in -4..(4 - tx) step (8 - tx)) {
+                    for(dy0 in -4..(4 - ty) step (8 - ty)) {
+                        val dx = x + dx0 - 1+ if (rand) Random.nextInt(-1, 2) else 0
+                        val dy = y + dy0 - 1+ if (rand) Random.nextInt(-1, 2) else 0
+                        if (!rand || Random.nextInt(2) == 0) {
+                            move(dx, dy, true)
+                            move(dx + 1, dy, true)
+                            move(dx + 1, dy + 1, true)
+                            move(dx, dy + 1, true)
+                        } else {
+                            move(dx + 1, dy, true)
+                            move(dx, dy, true)
+                            move(dx, dy + 1, true)
+                            move(dx + 1, dy + 1, true)
+                        }
+                    }
+                }
+            }
+            RuleStart.RANDOM10, RuleStart.RANDOM20 -> {
+                val px0 = rules.size.width / 5
+                val px1 = rules.size.width - px0 + 1
+                val py0 = rules.size.height / 5
+                val py1 = rules.size.height - py0 + 1
+                val needCount = when(rules.start) {
+                    RuleStart.RANDOM10 -> 10
+                    RuleStart.RANDOM20 -> 20
+                    else -> badAlgorithm()
+                }
+                var putCount = 0
+                var tryCount = 0
+                put@while (putCount < needCount && tryCount < 10000) {
+                    tryCount++
+                    val x = Random.nextInt(px0, px1)
+                    val y = Random.nextInt(py0, py1)
+                    for(dx in -1..1) {
+                        for(dy in -1..1) {
+                            if (field.dotSide(x + dx, y + dy) != -1) {
+                                continue@put
+                            }
+                        }
+                    }
+                    move(x, y, true)
+                    putCount ++
+                }
+            }
+        }
     }
 
     init {
@@ -310,7 +446,7 @@ class GBattle(
         var points: Int,
         var totalTime: Int
     ) {
-        constructor(user: GUserId, rules: GRules) : this(user, 0, rules.totalTime)
+        constructor(user: GUserId, rules: GRules) : this(user, 0, rules.timer.fullTime)
 
         @JsonTransient
         var lastAskDrawMove: Int? = null

@@ -51,13 +51,6 @@ export function getMe(a) { return apiCall("getMe", a, 3) }
 
 /**
  * @async
- * @param { {} } a
- * @returns {Promise<(GRules)[]>}
- */
-export function getRules(a) { return apiCall("getRules", a, 3) }
-
-/**
- * @async
  * @param { {ids: (Number)[]} } a
  * @returns {Promise<(GUser)[]>}
  */
@@ -93,7 +86,7 @@ export function resetPassword(a) { return apiCall("resetPassword", a, 2) }
 
 /**
  * @async
- * @param { {name: ?String, pic: ??String, rules: ?String} } a
+ * @param { {name: ?String, pic: ??String, ruleSize: ?RuleSize, ruleStart: ?RuleStart, ruleTimer: ?RuleTimer} } a
  * @returns {Promise<void>}
  */
 export function saveUser(a) { return apiCall("saveUser", a, 3) }
@@ -136,6 +129,43 @@ export const BattleOver = {
     TIMEOUT: { name: "TIMEOUT", title: "Таймаут" },
     DRAW: { name: "DRAW", title: "Ничья" },
     GROUND: { name: "GROUND", title: "Заземление" },
+    __proto__: ApiEnum,
+}
+
+/**
+ * dotsgame.enums.RuleSize
+ * @enum
+ */
+export const RuleSize = {
+    STANDARD: { name: "STANDARD", height: 32, title: "Стандарт", width: 39 },
+    MINI: { name: "MINI", height: 16, title: "Мини", width: 16 },
+    __proto__: ApiEnum,
+}
+
+/**
+ * dotsgame.enums.RuleStart
+ * @enum
+ */
+export const RuleStart = {
+    EMPTY: { name: "EMPTY", title: "Пустое поле" },
+    CROSS: { name: "CROSS", title: "Скрест по-центру" },
+    CROSS2: { name: "CROSS2", title: "Два скреста по-центру" },
+    CROSS4: { name: "CROSS4", title: "Четыре скреста по-центру" },
+    CROSS4R: { name: "CROSS4R", title: "Четыре скреста случайно" },
+    RANDOM10: { name: "RANDOM10", title: "10 точек случайно" },
+    RANDOM20: { name: "RANDOM20", title: "20 точек случайно" },
+    __proto__: ApiEnum,
+}
+
+/**
+ * dotsgame.enums.RuleTimer
+ * @enum
+ */
+export const RuleTimer = {
+    STANDARD: { name: "STANDARD", addUnused: false, fullTime: 240, moveTime: 20, randomMove: false, title: "Стандарт" },
+    FISHER: { name: "FISHER", addUnused: true, fullTime: 240, moveTime: 20, randomMove: false, title: "Фишер" },
+    BLITZ: { name: "BLITZ", addUnused: false, fullTime: 60, moveTime: 5, randomMove: false, title: "Блиц" },
+    BLITZ_RANDOM: { name: "BLITZ_RANDOM", addUnused: false, fullTime: 0, moveTime: 5, randomMove: true, title: "Блиц со случайным ходом" },
     __proto__: ApiEnum,
 }
 

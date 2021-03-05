@@ -95,8 +95,9 @@ import User from "./User";
 import FButton from "../common/Forms/FButton";
 import {acceptOffer, toggleOffer} from "api";
 import {getUser} from "./Users";
+import FEnumSelect from "../common/Forms/FEnumSelect";
 export default {
-    components: {FButton, User},
+    components: {FEnumSelect, FButton, User},
     methods: {
         getUser,
         async toggleOffer(u) {

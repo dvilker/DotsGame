@@ -65,15 +65,20 @@ object GBattles {
                 val now = System.currentTimeMillis()
                 list.filterInPlace { battle ->
                     if (battle.over == null) {
-                        if (now > battle.moveStartTime + (battle.side().totalTime + battle.rules.moveTime) * 1000) {
-                            battle.over(
-                                BattleOver.TIMEOUT,
-                                if (battle.moves.length > 10) {
-                                    1 - battle.moveSide
-                                } else {
-                                    null
-                                }
-                            )
+                        if (now > battle.moveStartTime + (battle.side().totalTime + battle.rules.timer.moveTime) * 1000) {
+                            val over = if (battle.rules.timer.randomMove) {
+                                !battle.randomMove()
+                            } else true
+                            if (over) {
+                                battle.over(
+                                    BattleOver.TIMEOUT,
+                                    if (battle.moves.length > 10) {
+                                        1 - battle.moveSide
+                                    } else {
+                                        null
+                                    }
+                                )
+                            }
                         }
                         true
                     } else if (now - battle.moveStartTime > 60_000) {

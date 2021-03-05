@@ -20,9 +20,12 @@ object GOffers {
             } else {
                 // make
                 if (GBattles.exists(side0, side1, true, true)) {
-                    throw badUnknownParam("Игра уже идет")
+                    badUnknownParam("Игра уже идет")
                 }
-                val offer = GOffer(side0, side1, GRules.default)
+                val size1User = synchronized(Context.connections) {
+                    Context.connections.firstOrNull { it.userId == side1 }
+                }?.userNN ?: badUnknownParam("Игрок не подключен")
+                val offer = GOffer(side0, side1, GRules(size1User))
                 list.add(offer)
                 Context.broadcastEvent(EvOffersAdd(listOf(offer))) {
                     it.userId == offer.side0 || it.userId == offer.side1

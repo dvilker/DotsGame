@@ -473,6 +473,14 @@ export function errorToString(error) {
     }
 }
 
+export function enumFromName(enm, name) {
+    for (let k in enm) {
+        if(k === name && enm.hasOwnProperty(k)) {
+            return enm[k]
+        }
+    }
+    return null
+}
 
 export const ApiEnum = Object.create(Object.prototype, {
     asPromise: {

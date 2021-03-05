@@ -3,6 +3,9 @@ package dotsgame.api
 import dotsgame.api.model.GRules
 import dotsgame.api.model.GUser
 import dotsgame.entities.User
+import dotsgame.enums.RuleSize
+import dotsgame.enums.RuleStart
+import dotsgame.enums.RuleTimer
 import dotsgame.server.Context
 import dotsgame.server.threadContext
 import zApi.api.ApiMethod
@@ -21,7 +24,9 @@ import javax.imageio.ImageIO
 fun saveUser(
     name: Ref<String>? = null,
     pic: Ref<String?>? = null,
-    rules: Ref<String>? = null
+    ruleSize: Ref<RuleSize>? = null,
+    ruleStart: Ref<RuleStart>? = null,
+    ruleTimer: Ref<RuleTimer>? = null,
 ) {
     val user = getDb().transactionDb { db ->
         val user = db.get(
@@ -32,7 +37,9 @@ fun saveUser(
             User::pic,
             User::level,
             User::score,
-            User::rules,
+            User::ruleSize,
+            User::ruleStart,
+            User::ruleTimer,
         )
         if (name != null) {
             val name0 = name.value.nullIfBlank()?.normalizeName2() ?: badParam("name", "Как вас зовут?")
@@ -114,11 +121,14 @@ fun saveUser(
                 user.pic = null
             }
         }
-        if (rules != null) {
-            if (GRules.all.none { it.code == rules.value }) {
-                badParam("rules", "Неизвестные правила игры")
-            }
-            user.rules = rules.value
+        if (ruleSize != null) {
+            user.ruleSize = ruleSize.value
+        }
+        if (ruleStart != null) {
+            user.ruleStart = ruleStart.value
+        }
+        if (ruleTimer != null) {
+            user.ruleTimer = ruleTimer.value
         }
         db.save(user)
         user

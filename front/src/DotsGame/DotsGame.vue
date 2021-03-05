@@ -16,8 +16,14 @@ import Desktop from '../common/Desktop/Desktop'
 import Field from './Field/Field'
 import UserList from './UserList'
 import Chat from './Chat'
-import {addConnectionEventListener, apiHandlers, removeConnectionEventListener, wsConnect} from "../common/api0";
-import {selectRoom} from "api";
+import {
+    addConnectionEventListener,
+    apiHandlers,
+    enumFromName,
+    removeConnectionEventListener,
+    wsConnect
+} from "../common/api0";
+import {RuleSize, RuleStart, RuleTimer, selectRoom} from "api";
 import {getUser} from "./Users";
 import FButton from "../common/Forms/FButton";
 import {delay} from "../common/misc";
@@ -118,6 +124,9 @@ export default {
                 case 'battle': {
                     let battle = ev.battle
                     battle.users = [getUser(battle.side0.userId), getUser(battle.side1.userId)]
+                    battle.rules.start = enumFromName(RuleStart, battle.rules.start)
+                    battle.rules.size = enumFromName(RuleSize, battle.rules.size)
+                    battle.rules.timer = enumFromName(RuleTimer, battle.rules.timer)
                     battle.moves = ''
                     this.activeBattle = battle
                     break

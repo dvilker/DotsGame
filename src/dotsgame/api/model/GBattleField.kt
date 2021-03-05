@@ -68,6 +68,8 @@ class GBattleField(val width: Int, val height: Int) {
 
     private fun index(x: Int, y: Int): Int = x * height + y
 
+    fun dotSide(x: Int, y: Int): Int = field[index(x, y)].side()
+
     fun addMove(x: Int, y: Int): Int {
         if (x < 0 || x >= width || y < 0 || y >= height) {
             badUnknownParam("Ход вне поля")

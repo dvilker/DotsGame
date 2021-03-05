@@ -1,7 +1,6 @@
 package dotsgame.entities
 
-import dotsgame.enums.BattleOver
-import dotsgame.enums.UserLevel
+import dotsgame.enums.*
 import zDb.entities.Entity
 import zDb.entities.annotations.EntityInfo
 import java.time.LocalDateTime
@@ -18,6 +17,9 @@ interface Battle: Entity {
         }
 
         override fun Defaults.defaults() {
+            default(Battle::ruleSize, RuleSize.default)
+            default(Battle::ruleStart, RuleStart.default)
+            default(Battle::ruleTimer, RuleTimer.default)
         }
 
         override fun Automations.automations() {
@@ -49,5 +51,9 @@ interface Battle: Entity {
     var scoreBefore: List<Int>
 
     var scoreChange: List<Int>
+
+    val ruleSize: RuleSize
+    val ruleStart: RuleStart
+    val ruleTimer: RuleTimer
 
 }

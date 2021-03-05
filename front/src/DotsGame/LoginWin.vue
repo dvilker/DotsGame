@@ -126,12 +126,24 @@
         <template v-else-if="div === 13">
             <div><h1>Правила игры</h1></div>
             <template v-if="!success">
-                <FWaiter :ac="$asyncComputed.rules">
-                    <FLabel caption="Ваши правила игры">
-                        <FRadio v-for="r of rules" name="rules" :value="r.code" style="margin-top: calc(var(--cGap) / 2)">
-                            {{ r.title }}
-                            <div :class="$cs.FNotes">Поле {{r.width}}&times{{r.height}}, времени: {{ formatMS(r.totalTime) }} сек., на ход: {{ formatMS(r.moveTime) }} сек.</div>
-                        </FRadio>
+                <FWaiter :ac="$asyncComputed.me">
+                    <FLabel caption="Размер поля">
+                        <FEnumSelect name="ruleSize" :enum="RuleSize" @item="ex.ruleSize=$event" />
+                        <div v-if="ex.ruleSize" class="FNotes">
+                            Ширина: {{ ex.ruleSize.width }}, высота: {{ ex.ruleSize.height }}.
+                        </div>
+                    </FLabel>
+                    <FLabel caption="Таймер">
+                        <FEnumSelect name="ruleTimer" :enum="RuleTimer" @item="ex.ruleTimer=$event" />
+                        <div v-if="ex.ruleTimer" class="FNotes">
+                            Всего времени: {{ formatMS(ex.ruleTimer.fullTime) }}<br>
+                            Времени на ход: {{ formatMS(ex.ruleTimer.moveTime) }}<br>
+                            Увеличивать время: {{ ex.ruleTimer.addUnused ? 'Да, если ход сделан быстрее чем за ' + formatMS(ex.ruleTimer.moveTime): 'Нет' }}<br>
+                            По окончании времени: {{ ex.ruleTimer.randomMove ? 'Случайный ход': 'Поражение' }}
+                        </div>
+                    </FLabel>
+                    <FLabel caption="Стартовая позиция">
+                        <FEnumSelect name="ruleStart" :enum="RuleStart" />
                     </FLabel>
                     <div :class="$cs.FNotes">
                         Когда вам предложат партию, она будет по этим правилам.
@@ -159,7 +171,7 @@
 </template>
 
 <script>
-import {getMe, getRules, login, register, resetPassword, saveUser} from "api";
+import {getMe, login, register, resetPassword, RuleSize, RuleStart, RuleTimer, saveUser} from "api";
 import FForm from "../common/Forms/form/FForm";
 import FLabel from "../common/Forms/FLabel";
 import FText from "../common/Forms/FText";
@@ -170,13 +182,22 @@ import FPic from "../common/Forms/FPic";
 import FRadio from "../common/Forms/FRadio";
 import FWaiter from "../common/Forms/FWaiter";
 import {formatMS} from "../common/misc";
+import FEnumSelect from "../common/Forms/FEnumSelect";
 
 export default {
-    components: {FWaiter, FRadio, FPic, FBtn, FButton, FError, FText, FLabel, FForm},
+    components: {FEnumSelect, FWaiter, FRadio, FPic, FBtn, FButton, FError, FText, FLabel, FForm},
     emits: ['closeResolve'],
+    created() {
+        Object.assign(this, {
+            RuleStart,
+            RuleTimer,
+            RuleSize,
+        })
+    },
     data() {
         return {
             formValue: {},
+            ex: {},
             div: this.$root.user ? 10 : 0,
             success: false
         }
@@ -193,16 +214,10 @@ export default {
     },
     asyncComputed: {
         async me() {
-            if (this.div === 11 || this.div === 12) {
+            if (this.div === 11 || this.div === 12 || this.div === 13) {
                 return await this.getMe0()
             }
         },
-        async rules() {
-            if (this.div === 13) {
-                await this.getMe0()
-                return await getRules()
-            }
-        }
     },
     methods: {
         formatMS,
