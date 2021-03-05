@@ -218,43 +218,6 @@ class GBattle(
         else -> badAlgorithm()
     }
 
-    fun randomMove(): Boolean {
-        var tryCount = 0
-        put@while (tryCount < 100) {
-            tryCount++
-            val x = Random.nextInt(0, rules.size.width)
-            val y = Random.nextInt(0, rules.size.height)
-            if (field.dotSide(x, y) != -1) {
-                continue@put
-            }
-            move(x, y)
-            return true
-        }
-        var count = 0
-        for(x in 0 until rules.size.width) {
-            for(y in 0 until rules.size.height) {
-                if (field.dotSide(x, y) != -1) {
-                    count++
-                }
-            }
-        }
-        if (count == 0) {
-            return false
-        }
-        val move = Random.nextInt(count)
-        for(x in 0 until rules.size.width) {
-            for(y in 0 until rules.size.height) {
-                if (field.dotSide(x, y) != -1) {
-                    if (--count == move) {
-                        move(x, y)
-                        return true
-                    }
-                }
-            }
-        }
-        return false
-    }
-
     fun move(x: Int, y: Int) {
         move(x, y, false)
     }

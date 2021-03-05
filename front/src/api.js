@@ -162,10 +162,9 @@ export const RuleStart = {
  * @enum
  */
 export const RuleTimer = {
-    STANDARD: { name: "STANDARD", addUnused: false, fullTime: 240, moveTime: 20, randomMove: false, title: "Стандарт" },
-    FISHER: { name: "FISHER", addUnused: true, fullTime: 240, moveTime: 20, randomMove: false, title: "Фишер" },
-    BLITZ: { name: "BLITZ", addUnused: false, fullTime: 60, moveTime: 5, randomMove: false, title: "Блиц" },
-    BLITZ_RANDOM: { name: "BLITZ_RANDOM", addUnused: false, fullTime: 0, moveTime: 5, randomMove: true, title: "Блиц со случайным ходом" },
+    STANDARD: { name: "STANDARD", addUnused: false, fullTime: 240, moveTime: 20, title: "Стандарт" },
+    FISHER: { name: "FISHER", addUnused: true, fullTime: 240, moveTime: 20, title: "Фишер" },
+    BLITZ: { name: "BLITZ", addUnused: false, fullTime: 60, moveTime: 5, title: "Блиц" },
     __proto__: ApiEnum,
 }
 
