@@ -44,6 +44,9 @@
                 <template v-else-if="battle.over.over === 'FULL_FILL'">Ходов больше нет — игра окончена</template>
                 <template v-else>{{ battle.over.over }} — игра окончена</template>
             </template>
+            <div style="float: right">
+                <FNumber :min="1" :max="mover.moveCount" v-model="moveI" size="2" :class="moveI < mover.moveCount && $style.Field_move_warn"/>
+            </div>
         </div>
         <!--  39 32 -->
         <svg :viewBox="`0.5 0.5 ${(cols - 1) * cellSize + paddings * 2}.5 ${(rows - 1) * cellSize + paddings * 2}.5`" :width="(cols - 1) * cellSize + paddings * 2 " :height="(rows - 1) * cellSize + paddings * 2" style="margin:0;vertical-align:top">
@@ -55,14 +58,16 @@
             <g :class="$style.field" :transform="`translate(${paddings - cellSize}.5, ${paddings - cellSize}.5)`">
                 <g :class="[$style.circles, sideClass(battle.moveSide)]" @click.prevent="circleClick">
                     <template v-for="x of cols">
-                        <template v-for="y of rows" v-var="d = dot(x - 1, y - 1), dLast = d.last ? {x, y} : dLast">
-                            <circle v-if="d.side !== -1 || d.captured" :r="circleRadius" :cx="x * cellSize -.5" :cy="(rows - y + 1) * cellSize-.5" :class="[sideClass(d.side), d.gnd && /*d.side !== -1 && !d.captured && */$style.Field_gnd, d._notGnd && $style.Field_notGnd, d._free && $style.Field_free]"/>
-                            <a v-else :href="'#' + x + ':' + y"><circle :r="circleRadius" :cx="x * cellSize -.5" :cy="(rows - y + 1) * cellSize-.5" :class="[sideClass(d.side), d.gnd && /*d.side !== -1 && !d.captured && */$style.Field_gnd, d._notGnd && $style.Field_notGnd, d._free && $style.Field_free]"/></a>
+                        <template v-for="y of rows" v-var="d = dot(x - 1, y - 1), dLast = d.move === moveI - 1 ? {x, y} : dLast">
+                            <circle v-if="d.side !== -1 || d.captured" :r="circleRadius" :cx="x * cellSize -.5" :cy="(rows - y + 1) * cellSize-.5" :class="[sideClass(d.move < moveI ? d.side : undefined), d.gnd && /*d.side !== -1 && !d.captured && */$style.Field_gnd, d._notGnd && $style.Field_notGnd, d._free && $style.Field_free]"/>
+                            <a v-else :href="'#' + x + ':' + y"><circle :r="circleRadius" :cx="x * cellSize -.5" :cy="(rows - y + 1) * cellSize-.5" :class="[sideClass(d.move < moveI ? d.side : undefined), d.gnd && /*d.side !== -1 && !d.captured && */$style.Field_gnd, d._notGnd && $style.Field_notGnd, d._free && $style.Field_free]"/></a>
                         </template>
                     </template>
                 </g>
                 <g :class="$style.paths">
-                    <path v-for="p of mover.paths" :d="p.d" :class="sideClass(p.side)"/>
+                    <template v-for="p of mover.paths">
+                        <path v-if="p.move < moveI" :d="p.d" :class="sideClass(p.side)"/>
+                    </template>
                 </g>
                 <circle v-if="dLast" :r="1" :cx="dLast.x * cellSize -.5" :cy="(rows - dLast.y + 1) * cellSize-.5" :class="$style.last"/>
             </g>
@@ -82,6 +87,8 @@ import moveSound from "../../sound/move.ogg";
 import capSound from "../../sound/cap.ogg";
 import {errorToString} from "../../common/api0";
 import {nextTick} from "vue";
+import FText from "../../common/Forms/FText";
+import FNumber from "../../common/Forms/FNumber";
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -112,7 +119,7 @@ function from62(char) {
 }
 
 export default {
-    components: {FButton, User},
+    components: {FNumber, FText, FButton, User},
     props: {
         circleRadius: {default: 5},
         cellSize: {default: 20},
@@ -146,6 +153,7 @@ export default {
             moveTime: null,
             moveTimeExtra: null,
             errorHint: null,
+            moveI: mover.moveCount
         }
     },
     watch: {
@@ -163,7 +171,11 @@ export default {
             handler(v) {
                 let moves = v.substr(this.processed)
                 if (moves) {
+                    let moveCount = this.mover.moveCount
                     this.mover.follow(moves)
+                    if (moveCount <= this.moveI) {
+                        this.moveI = this.mover.moveCount
+                    }
                     this.processed = v.length
                     this.soundMove.currentTime = 0
                     clearTimeout(this.nowTimer)
@@ -481,5 +493,8 @@ circle.last {
     padding-left: 1em;
     color: $Red700;
     animation: Field_errorHint 2s;
+}
+.Field_move_warn {
+    background-color: $Red50;
 }
 </style>

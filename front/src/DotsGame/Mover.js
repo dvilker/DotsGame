@@ -8,6 +8,7 @@ export function Mover(cols, rows, cellSize) {
     this.dots = dots
     this.paths = []
     this.moveSide = 0
+    this.moveCount = 0
     this.lastDot = null
 }
 
@@ -24,11 +25,15 @@ Mover.prototype.move = function(x, y) {
     if (dot.side === -1) {
         this._setLastDot(dot)
         dot.side = this.moveSide
+        dot.move = this.moveCount++
         this.lookupCaptures(this.moveSide, 2, x, y)
         this.lookupGround(this.moveSide)
         this.moveSide = 1 - this.moveSide
         this.lookupCaptures(this.moveSide, 1, x, y)
         this.lookupGround(this.moveSide)
+    } else {
+        console.error("Wrong moves")
+        debugger
     }
 }
 
@@ -53,6 +58,7 @@ Mover.prototype.follow = function(moves) {
             lastDot = dot
             //moves2.push(moves[i], moves[i + 1])
             dot.side = this.moveSide
+            dot.move = this.moveCount++
             this.moveSide = 1 - this.moveSide
         } else {
             console.error("Wrong moves")
@@ -222,7 +228,8 @@ Mover.prototype.lookupCaptures = function (side, mode, startX, startY) {
                             side,
                             startX,
                             startY,
-                            way: way.join('')
+                            way: way.join(''),
+                            move: this.moveCount - 1
                         }
                         this.preparePathWay(path)
                         this.paths.push(path)
