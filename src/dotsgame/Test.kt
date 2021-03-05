@@ -1,5 +1,0 @@
-package dotsgame
-
-fun main() {
-
-}
