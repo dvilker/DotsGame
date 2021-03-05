@@ -9,14 +9,14 @@ import dotsgame.server.threadContext
 fun connected() {
     val context = threadContext
     val user = context.user
-    val wasRemoved = Context.connections.removeIf {
-        if (it !== context && it.user == user) {
-            it.dropConnection()
-            true
-        } else {
-            false
+    val wasRemoved = if (user != null) {
+        Context.connections.removeIf {
+            if (it !== context && it.user == user) {
+                it.dropConnection()
+                true
+            } else false
         }
-    }
+    } else false
     context.sendEvent(EvInit(
         user?.let { GUser(it) },
         Context.connections.mapNotNull { it.userId }
