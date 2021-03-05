@@ -340,8 +340,8 @@ Mover.prototype.fillGround = function (x, y, side) {
         let dot = this.dots[x * this.rows + y]
         if (!dot.gnd && (dot.side === side || dot.capSide === side)) {
             dot.gnd = true
-            delete dot._free
-            delete dot._notGnd
+            // delete dot._free
+            // delete dot._notGnd
             this.fillGround(x - 1, y, side)
             this.fillGround(x + 1, y, side)
             this.fillGround(x, y - 1, side)
@@ -358,17 +358,17 @@ Mover.prototype.calcGroundScore = function (side) {
     for (let x = 1; x < cols - 1; x++) {
         for (let y = 1; y < rows - 1; y++) {
             let dot = this.dots[x * this.rows + y]
-            delete dot._notGnd
-            delete dot._free
+            // delete dot._notGnd
+            // delete dot._free
             if (dot.gnd) {
                 continue
             }
             if (dot.side === side && (!dot.captured || dot.capSide === side)) {
                 notGnd ++
-                dot._notGnd = true
+                // dot._notGnd = true
             } else if (dot.side !== -1 && dot.side !== side && dot.capSide === side) {
                 free ++
-                dot._free = true
+                // dot._free = true
             }
         }
     }

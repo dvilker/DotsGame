@@ -59,8 +59,8 @@
                 <g :class="[$style.circles, sideClass(battle.moveSide)]" @click.prevent="circleClick">
                     <template v-for="x of cols">
                         <template v-for="y of rows" v-var="d = dot(x - 1, y - 1), dLast = d.move === moveI - 1 ? {x, y} : dLast">
-                            <circle v-if="d.side !== -1 || d.captured" :r="circleRadius" :cx="x * cellSize -.5" :cy="(rows - y + 1) * cellSize-.5" :class="[sideClass(d.move < moveI ? d.side : undefined), d.gnd && /*d.side !== -1 && !d.captured && */$style.Field_gnd, d._notGnd && $style.Field_notGnd, d._free && $style.Field_free]"/>
-                            <a v-else :href="'#' + x + ':' + y"><circle :r="circleRadius" :cx="x * cellSize -.5" :cy="(rows - y + 1) * cellSize-.5" :class="[sideClass(d.move < moveI ? d.side : undefined), d.gnd && /*d.side !== -1 && !d.captured && */$style.Field_gnd, d._notGnd && $style.Field_notGnd, d._free && $style.Field_free]"/></a>
+                            <circle v-if="d.side !== -1 || d.captured" :r="circleRadius" :cx="x * cellSize -.5" :cy="(rows - y + 1) * cellSize-.5" :class="[sideClass(d.move < moveI ? d.side : undefined), /*d.gnd && /!*d.side !== -1 && !d.captured && *!/$style.Field_gnd, d._notGnd && $style.Field_notGnd, d._free && $style.Field_free*/]"/>
+                            <a v-else :href="'#' + x + ':' + y"><circle :r="circleRadius" :cx="x * cellSize -.5" :cy="(rows - y + 1) * cellSize-.5" :class="[sideClass(d.move < moveI ? d.side : undefined), /*d.gnd && /!*d.side !== -1 && !d.captured && *!/$style.Field_gnd, d._notGnd && $style.Field_notGnd, d._free && $style.Field_free*/]"/></a>
                         </template>
                     </template>
                 </g>
@@ -466,21 +466,20 @@ circle.last {
     animation: Field_accDraw 1s 4 alternate;
 }
 
-.Field_gnd {
-    stroke: black!important;
-    stroke-width: 1px!important;
-}
-
-.Field_notGnd {
-    stroke: black!important;
-    stroke-width: 2px!important;
-    stroke-dasharray: 1px 1px!important;
-}
-.Field_free {
-    stroke: black!important;
-    stroke-width: 2px!important;
-    stroke-dasharray: 3px 3px!important;
-}
+//.Field_gnd {
+//    stroke: black!important;
+//    stroke-width: 1px!important;
+//}
+//.Field_notGnd {
+//    stroke: black!important;
+//    stroke-width: 2px!important;
+//    stroke-dasharray: 1px 1px!important;
+//}
+//.Field_free {
+//    stroke: black!important;
+//    stroke-width: 2px!important;
+//    stroke-dasharray: 3px 3px!important;
+//}
 .Field_notGnd.Field_free {
     stroke-width: 4px!important;
 }
