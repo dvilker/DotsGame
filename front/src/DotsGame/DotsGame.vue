@@ -1,8 +1,8 @@
 <template>
     <Desktop :class="$style.bodyRoot" :apiHandlers="apiHandlers" style="min-height: 100%">
         <div class="cols rows">
-            <UserList style="height: 50%" :class="$style.bodyUserList"/>
-            <Chat style="height: 50%" v-if="activeRoom" :class="$style.bodyChat"/>
+            <UserList :class="$style.bodyUserList"/>
+            <Chat v-if="activeRoom" :class="$style.bodyChat"/>
         </div>
         <Field v-if="activeBattle" :battle="activeBattle" :key="activeBattle.id" :class="$style.bodyField"/>
         <div v-if="!connected" style="position: absolute; opacity: .9; padding: calc(var(--cGap) / 2) var(--cGap); box-shadow: 0 0 1em rgba(0,0,0,.25)">
@@ -20,6 +20,7 @@ import {addConnectionEventListener, apiHandlers, removeConnectionEventListener, 
 import {selectRoom} from "api";
 import {getUser} from "./Users";
 import FButton from "../common/Forms/FButton";
+import {delay} from "../common/misc";
 
 export default {
     components: {FButton, Desktop, Field, UserList, Chat},
@@ -194,7 +195,19 @@ export default {
             // await selectBattle({battleId: b.id})
         },
         async reconnect() {
-            await wsConnect(true)
+            let time = Date.now()
+            try {
+                await wsConnect(true)
+            } catch (e) {
+                if (e && e.isSocketConnectionError) {
+                    time = 1000 - (Date.now() - time)
+                    if (time > 0) {
+                        await delay(time)
+                    }
+                } else {
+                    throw e
+                }
+            }
         }
     },
     data() {
@@ -243,9 +256,17 @@ html, body {
 
 .bodyUserList {
     width: 300px;
+    &:last-child {
+        height: 100%;
+    }
+    &:not(:last-child) {
+        height: 50%;
+    }
 }
 
 .bodyChat {
     width: 300px;
+    max-width: 300px;
+    height: 50%;
 }
 </style>

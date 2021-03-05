@@ -56,7 +56,7 @@ export function wsConnect(forceReconnect) {
                 waitFirst && clearTimeout(waitFirst)
                 console.log("WS onerror while connect", e)
                 promise._drop()
-                reject(e)
+                reject({ message: "Не удалось подключиться", isSocketConnectionError: true} )
             }
             ws.onclose = function (e) {
                 waitFirst && clearTimeout(waitFirst)

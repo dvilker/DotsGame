@@ -32,7 +32,8 @@
             <FButton v-else-if="battle.askDraw === mySide" :disabled="!!battle.over" @click="draw(false)">⚖ Отозвать предложение ничьи</FButton>
             <FButton v-else :disabled="!!battle.over" @click="draw(true)" :class="$style.Field_accDraw">⚖ Согласиться на ничью</FButton>
 
-            <template v-if="battle.over">
+            <span v-if="errorHint" :class="$style.Field_errorHint">{{errorHint}}</span>
+            <template v-else-if="battle.over">
                 &nbsp;
                 <template v-if="battle.over.over === 'SURRENDER' && battle.over.winSide === mySide">Соперник сдался — игра окончена</template>
                 <template v-else-if="battle.over.over === 'SURRENDER'">Вы сдались — игра окончена</template>
@@ -79,6 +80,8 @@ import {formatMS, formatNumber} from "../../common/misc";
 import FButton from "../../common/Forms/FButton";
 import moveSound from "../../sound/move.ogg";
 import capSound from "../../sound/cap.ogg";
+import {errorToString} from "../../common/api0";
+import {nextTick} from "vue";
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -142,6 +145,7 @@ export default {
             processed: this.battle.moves.length,
             moveTime: null,
             moveTimeExtra: null,
+            errorHint: null,
         }
     },
     watch: {
@@ -212,15 +216,22 @@ export default {
         },
         async dotClick(x, y) {
             try {
-                await battleMove({
-                    battleId: this.battle.id,
-                    x,
-                    y
-                })
+                if (this.mySide == null) {
+                    this.hintError("Вы — зритель")
+                } else if (this.battle.over) {
+                    this.hintError("Игра окончена")
+                } else if (this.mySide !== this.battle.moveSide) {
+                    this.hintError("Не ваш ход")
+                } else {
+                    await battleMove({
+                        battleId: this.battle.id,
+                        x,
+                        y
+                    })
+                }
             } catch (e) {
-                await this.$msgErr(e)
+                this.hintError(errorToString(e))
             }
-            // this.mover.move(x, y)
         },
         async surrender() {
             let r = await this.$msg({
@@ -228,11 +239,32 @@ export default {
                 buttons: YES_NO_BUTTON
             })
             if (r.result === 'yes') {
-                await battleSurrender({battleId: this.battle.id})
+                try {
+                    await battleSurrender({battleId: this.battle.id})
+                } catch (e) {
+                    this.hintError(errorToString(e))
+                }
             }
         },
         async draw(ask) {
-            await battleDraw({battleId: this.battle.id, ask})
+            try {
+                await battleDraw({battleId: this.battle.id, ask})
+            } catch (e) {
+                this.hintError(errorToString(e))
+            }
+        },
+        async hintError(errStr) {
+            if (this.errorHintTime) {
+                clearTimeout(this.errorHintTime)
+            }
+            if (this.errorHint) {
+                this.errorHint = null
+                await nextTick()
+            }
+            this.errorHint = errStr
+            this.errorHintTime = setTimeout(() => {
+                this.errorHint = null
+            }, 2000)
         }
     },
     computed: {
@@ -372,14 +404,14 @@ export default {
     }
 }
 @keyframes Field_last {
-    from {stroke-width: 0}
+    from {stroke-width: 1px}
     to {stroke-width: 3px}
 }
 circle.last {
     fill: white;
     stroke: white;
     stroke-width: 3px;
-    animation: Field_last 1s infinite alternate;
+    animation: Field_last 1s alternate infinite;
 }
 .paths {
     @each $side in $sides {
@@ -439,5 +471,15 @@ circle.last {
 }
 .Field_notGnd.Field_free {
     stroke-width: 4px!important;
+}
+@keyframes Field_errorHint {
+    from { opacity: 100% }
+    to { opacity: 0 }
+}
+.Field_errorHint {
+    font-weight: bold;
+    padding-left: 1em;
+    color: $Red700;
+    animation: Field_errorHint 2s;
 }
 </style>
