@@ -1,6 +1,6 @@
 <template>
     <Desktop :class="$style.bodyRoot" :apiHandlers="apiHandlers" style="min-height: 100%">
-        <div class="cols rows">
+        <div :class="[$cs.cols, $cs.rows]">
             <UserList :class="$style.bodyUserList"/>
             <Chat v-if="activeRoom" :class="$style.bodyChat"/>
         </div>

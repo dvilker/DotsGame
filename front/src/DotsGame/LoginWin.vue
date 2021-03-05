@@ -129,13 +129,13 @@
                 <FWaiter :ac="$asyncComputed.me">
                     <FLabel caption="Размер поля">
                         <FEnumSelect name="ruleSize" :enum="RuleSize" @item="ex.ruleSize=$event" />
-                        <div v-if="ex.ruleSize" class="FNotes">
+                        <div v-if="ex.ruleSize" :class="$cs.FNotes">
                             Ширина: {{ ex.ruleSize.width }}, высота: {{ ex.ruleSize.height }}.
                         </div>
                     </FLabel>
                     <FLabel caption="Таймер">
                         <FEnumSelect name="ruleTimer" :enum="RuleTimer" @item="ex.ruleTimer=$event" />
-                        <div v-if="ex.ruleTimer" class="FNotes">
+                        <div v-if="ex.ruleTimer" :class="$cs.FNotes">
                             Всего времени: {{ formatMS(ex.ruleTimer.fullTime) }}<br>
                             Времени на ход: {{ formatMS(ex.ruleTimer.moveTime) }}<br>
                             Увеличивать время: {{ ex.ruleTimer.addUnused ? 'Да, если ход сделан быстрее чем за ' + formatMS(ex.ruleTimer.moveTime): 'Нет' }}<br>
