@@ -5,7 +5,6 @@
             @input="emitValue($event.target.value)"
             :disabled="disabled"
             :value="modelValue"
-            :placeholder="placeholder"
             :type="password ? 'password' : 'text'"
             v-bind="$attrs"
     /><template #btns><slot :Input="this"/><FBtn altKey="X" @click="setValue('')" title="Очистить">&times;</FBtn></template></F_InputBox>
@@ -18,8 +17,7 @@ import FBtn from "./FBtn";
 export default {
     mixins: [F_Value],
     props: {
-        password: Boolean,
-        placeholder: String
+        password: Boolean
     },
     mounted() {
         this.$el.focus = () => this.$refs.i.focus()

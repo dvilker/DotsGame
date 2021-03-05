@@ -21,6 +21,9 @@ export default {
         }
     },
     methods: {
+        async checkValue(v) {
+            return v
+        },
 
         /**
          * Отправляет событие об изменении значения.
@@ -44,6 +47,7 @@ export default {
             if (typeof value === "function") {
                 value = await value(this.modelValue)
             }
+            value = await this.checkValue(value)
             this.emitValue(value)
             await nextTick()
             this.focus(select)
