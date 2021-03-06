@@ -1,14 +1,22 @@
 <template>
-    <Desktop :class="$style.bodyRoot" :apiHandlers="apiHandlers" style="min-height: 100%">
-        <div :class="[$cs.cols, $cs.rows]">
-            <UserList :class="$style.bodyUserList"/>
-            <Chat v-if="activeRoom" :class="$style.bodyChat"/>
-        </div>
-        <Field v-if="activeBattle" :battle="activeBattle" :key="activeBattle.id" :class="$style.bodyField"/>
-        <div v-if="!connected" style="position: absolute; opacity: .9; padding: calc(var(--cGap) / 2) var(--cGap); box-shadow: 0 0 1em rgba(0,0,0,.25)">
-            Нет соединения с сервером. <FButton @click="reconnect">↻</FButton>
+    <Desktop :apiHandlers="apiHandlers">
+        <div :class="$style.DG_main">
+            <div :class="[$style.DG_left, $cs.cols, $cs.rows]">
+                <UserList :class="$style.DG_list"/>
+                <Chat v-if="activeRoom" :class="$style.DG_chat"/>
+            </div>
+            <Field
+                v-if="activeBattle"
+                :class="$style.DG_center"
+                :battle="activeBattle"
+                :key="activeBattle.id"
+            />
+            <div v-else :class="$style.DG_center">Пригласите кого-нибудь поиграть.</div>
         </div>
     </Desktop>
+    <div v-if="!connected" :class="$style.DG_ban">
+        Нет соединения с сервером. <FButton @click="reconnect">↻</FButton>
+    </div>
 </template>
 
 <script>
@@ -182,14 +190,9 @@ export default {
                     break
                 }
             }
-            console.log("EVEVEV", ev)
+            //console.log("EVEVEV", ev)
         }
         addConnectionEventListener(this._cel)
-        // apiHandlers.onAuth = async () => {
-        //     if (await this.$win(import('./LoginWin'))) {
-        //         return Promise.reject(null)
-        //     }
-        // }
         wsConnect()
     },
     beforeUnmount() {
@@ -246,25 +249,29 @@ html, body {
     padding: 0;
     margin: 0;
     background: whitesmoke;
+    max-height: 800px;
 }
-
-.bodyRoot {
+.DG_main {
+    width: 1140px;
+    min-height: 100%;
     display: flex;
-    justify-content: center;
-    flex-wrap: nowrap;
-    max-height: 100%;
-
+    margin: auto;
     > * {
+        flex-shrink: 0;
+        flex-grow: 0;
         background-color: white;
     }
 }
-
-.bodyField {
-
+.DG_left {
+    width: 300px;
+    box-sizing: border-box;
+}
+.DG_center {
+    width: 840px;
+    box-sizing: border-box;
 }
 
-.bodyUserList {
-    width: 300px;
+.DG_list {
     &:last-child {
         height: 100%;
     }
@@ -273,9 +280,19 @@ html, body {
     }
 }
 
-.bodyChat {
-    width: 300px;
+.DG_chat {
     max-width: 300px;
     height: 50%;
+}
+.DG_ban {
+    position: fixed ;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+    z-index: 99999;
+    background-color: white;
+    opacity: .9;
+    padding: calc(var(--cGap) / 2) var(--cGap);
+    box-shadow: 0 0 1em rgba(0,0,0,.25)
 }
 </style>

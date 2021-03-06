@@ -49,14 +49,20 @@
             </div>
         </div>
         <!--  39 32 -->
-        <svg :viewBox="`0.5 0.5 ${(cols - 1) * cellSize + paddings * 2}.5 ${(rows - 1) * cellSize + paddings * 2}.5`" :width="(cols - 1) * cellSize + paddings * 2 " :height="(rows - 1) * cellSize + paddings * 2" style="margin:0;vertical-align:top">
+        <svg :viewBox="`0.5 0.5 ${(cols - 1) * cellSize + paddings * 2}.5 ${(rows - 1) * cellSize + paddings * 2}.5`"
+             :width="(cols - 1) * cellSize + paddings * 2 "
+             :height="(rows - 1) * cellSize + paddings * 2"
+             style="margin:0;vertical-align:top"
+             @click.prevent="circleClick"
+             @touchend="circleTouchEnd"
+        >
             <path :d="backgroundPath" :class="$style.backgroundPath"/>
             <g :class="[$style.labels, $style.topLabels]"><text v-for="x of cols" :x="paddings + (x - 1) * cellSize" :y="paddings - circleRadius - textGap">{{ x }}</text></g>
             <g :class="[$style.labels, $style.bottomLabels]"><text v-for="x of cols" :x="paddings + (x - 1) * cellSize" :y="paddings + (rows - 1) * cellSize + circleRadius + textGap">{{ x }}</text></g>
             <g :class="[$style.labels, $style.leftLabels]"><text v-for="y of rows" :x="paddings - circleRadius - textGap" :y="paddings + (rows - 1) * cellSize - (y - 1) * cellSize">{{ y }}</text></g>
             <g :class="[$style.labels, $style.rightLabels]"><text v-for="y of rows" :x="paddings + (cols - 1) * cellSize + circleRadius + textGap" :y="paddings + (rows - 1) * cellSize - (y - 1) * cellSize">{{ y }}</text></g>
             <g :class="$style.field" :transform="`translate(${paddings - cellSize}.5, ${paddings - cellSize}.5)`">
-                <g :class="[$style.circles, sideClass(battle.moveSide)]" @click.prevent="circleClick">
+                <g :class="[$style.circles, sideClass(battle.moveSide)]">
                     <template v-for="x of cols">
                         <template v-for="y of rows" v-var="d = dot(x - 1, y - 1), dLast = d.move === moveI - 1 ? {x, y} : dLast">
                             <circle v-if="d.side !== -1 || d.captured" :r="circleRadius" :cx="x * cellSize -.5" :cy="(rows - y + 1) * cellSize-.5" :class="[sideClass(d.move < moveI ? d.side : undefined), /*d.gnd && /!*d.side !== -1 && !d.captured && *!/$style.Field_gnd, d._notGnd && $style.Field_notGnd, d._free && $style.Field_free*/]"/>
@@ -153,7 +159,9 @@ export default {
             moveTime: null,
             moveTimeExtra: null,
             errorHint: null,
-            moveI: mover.moveCount
+            moveI: mover.moveCount,
+            touchTime: null,
+            touchedA: null,
         }
     },
     watch: {
@@ -211,17 +219,27 @@ export default {
         dot(x, y) {
             return this.mover.dots[x * this.mover.rows + y]
         },
+        circleTouchEnd() {
+            this.touchTime = Date.now()
+        },
         circleClick(e) {
             let a
             if (e.target.tagName === 'circle') {
                 a = e.target.parentNode
                 if (a.tagName !== 'a') {
+                    this.touchedA = null
                     return;
                 }
             } else if (e.target.tagName === 'a') {
                 a = e.target
             } else {
+                this.touchedA = null
                 return
+            }
+            let touch = e.sourceCapabilities && e.sourceCapabilities.hasOwnProperty('firesTouchEvents') ? e.sourceCapabilities.firesTouchEvents : Date.now() - this.touchTime < 1000
+            if (touch && a !== this.touchedA) {
+                this.touchedA = a
+                return;
             }
             let coo = a.getAttribute('href').substr(1).split(':')
             this.dotClick(parseInt(coo[0]) - 1, parseInt(coo[1]) - 1)
@@ -390,7 +408,8 @@ export default {
 
 .circles {
     @each $side in $sides {
-        &.side#{map.get($side, index)} circle.sideZ:hover {
+        &.side#{map.get($side, index)} circle.sideZ:hover,
+        &.side#{map.get($side, index)} circle.sideZ:focus {
             fill: map.get($side, color);
             fill-opacity: .5;
         }

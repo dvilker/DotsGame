@@ -1,11 +1,9 @@
 <template>
-    <div>
-        <slot/>
-        <div v-if="windows && windows.length || topWindows && topWindows.length" :class="$style.Desktop_windows">
-            <Window v-for="w of windows" :win="w"/>
-            <Window v-for="w of topWindows" :win="w"/>
-        </div>
-        </div>
+    <slot/>
+    <div v-if="windows && windows.length || topWindows && topWindows.length" :class="$style.Desktop_windows">
+        <Window v-for="w of windows" :win="w"/>
+        <Window v-for="w of topWindows" :win="w"/>
+    </div>
 </template>
 
 <script>
