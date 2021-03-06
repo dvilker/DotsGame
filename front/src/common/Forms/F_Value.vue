@@ -5,7 +5,11 @@ import {nextTick} from "vue";
 
 export default {
     inheritAttrs: false,
-    inject: ['fcont'],
+    inject: {
+        fcont: {
+            default: null
+        }
+    },
     provide() {
         return { finput: this }
     },
@@ -31,7 +35,7 @@ export default {
         emitValue(value) {
             if (this.erroneous) {
                 this.erroneous = false
-                if (this.name) {
+                if (this.fcont && this.name) {
                     let {cont, path} = this.fcont.getRootCont(true)
                     cont.clearErrorFor(path, this.name)
                 }
